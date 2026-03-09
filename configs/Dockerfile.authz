@@ -1,0 +1,5 @@
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates
+COPY loa /usr/local/bin/loa
+COPY kit/ /etc/loa/
+ENTRYPOINT ["loa"]

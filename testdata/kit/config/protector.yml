@@ -1,0 +1,30 @@
+tool_mappings:
+  - executable: "cat"
+    action: "fs:Read"
+    resource_extractor: "first_arg"
+
+  - executable: "curl"
+    action: "http:Request"
+    resource_extractor: "domain_from_url"
+    context_extractors:
+      http_method: "method_from_curl_args"
+
+  - executable: "git"
+    action: "git:Command"
+    resource_extractor: "repo_from_git_args"
+
+  - pattern: "* | bash"
+    action: "__deny_always"
+  - pattern: "* | sh"
+    action: "__deny_always"
+  - pattern: "eval *"
+    action: "__deny_always"
+
+default_unmapped: deny
+
+audit:
+  log_dir: audit/
+  format: jsonl
+  log_permitted: true
+  log_denied: true
+  log_always_allowed: false

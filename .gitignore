@@ -1,0 +1,29 @@
+# Binary
+/loa
+
+# Test artifacts
+*.test
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Go
+vendor/
+
+# Local Codex/Claude workspace data
+.claude/
+
+# Cloudflare
+.wrangler/
+
+# Temp / logs
+tmp/
+*.log

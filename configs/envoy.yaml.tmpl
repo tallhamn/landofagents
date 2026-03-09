@@ -1,0 +1,108 @@
+admin:
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 9901
+
+static_resources:
+  listeners:
+  - name: forward_proxy
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 10000
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: forward_proxy
+          http_protocol_options:
+            allow_absolute_url: true
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: all
+              domains: ["*"]
+              routes:
+              # HTTPS: CONNECT tunnel (api.anthropic.com:443 etc.)
+              - match:
+                  connect_matcher: {}
+                route:
+                  cluster: dynamic_forward_proxy_cluster
+                  upgrade_configs:
+                  - upgrade_type: CONNECT
+                    connect_config: {}
+              # HTTP: regular forward proxy
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: dynamic_forward_proxy_cluster
+          http_filters:
+          # Lua authz filter — calls loa-authz for every request (including CONNECT).
+          # We use Lua instead of ext_authz because Envoy's ext_authz HTTP service
+          # mirrors the original request method. For CONNECT, this causes the check
+          # request itself to be treated as a tunnel upgrade, breaking the authz call.
+          - name: envoy.filters.http.lua
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+              default_source_code:
+                inline_string: |
+                  function envoy_on_request(request_handle)
+                    local host = request_handle:headers():get(":authority") or ""
+                    local headers, body = request_handle:httpCall(
+                      "loa_authz_service",
+                      {
+                        [":method"] = "GET",
+                        [":path"] = "/",
+                        [":authority"] = "loa-authz",
+                        ["x-forwarded-host"] = host
+                      },
+                      "",
+                      {{.AuthzTimeoutMs}},
+                      false
+                    )
+                    local status = tonumber(headers[":status"])
+                    if status ~= 200 then
+                      request_handle:respond({[":status"] = "403"}, "")
+                    end
+                  end
+          # Dynamic forward proxy resolves and routes to the destination
+          - name: envoy.filters.http.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                name: dynamic_forward_proxy_cache
+                dns_lookup_family: V4_ONLY
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          # Allow CONNECT upgrades at the HCM level
+          upgrade_configs:
+          - upgrade_type: CONNECT
+
+  clusters:
+  # LOA authorization service
+  - name: loa_authz_service
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: loa_authz_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: loa-authz
+                port_value: 9002
+
+  # Dynamic forward proxy — resolves arbitrary hostnames on the fly
+  - name: dynamic_forward_proxy_cluster
+    lb_policy: CLUSTER_PROVIDED
+    cluster_type:
+      name: envoy.clusters.dynamic_forward_proxy
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+        dns_cache_config:
+          name: dynamic_forward_proxy_cache
+          dns_lookup_family: V4_ONLY

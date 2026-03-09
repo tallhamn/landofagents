@@ -1,0 +1,10 @@
+hook: openclaw
+image: ghcr.io/openclaw/openclaw:latest
+env:
+  - TELEGRAM_BOT_TOKEN
+  - OPENAI_API_KEY
+  - ANTHROPIC_API_KEY
+  - OPENROUTER_API_KEY
+base_cedar: |
+  // OpenClaw baseline: intentionally empty.
+  // Approve required network access through LOA policy flow.

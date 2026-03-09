@@ -1,0 +1,21 @@
+agents:
+  goggins:
+    runtime: claude-code
+    scope: goggins
+    volumes:
+      - ~/.openclaw-agents/goggins:/home/node/.openclaw
+  carmack:
+    runtime: claude-code
+    scope: carmack
+    volumes:
+      - ~/projects:/home/user/projects
+
+agent_groups:
+  agent:
+    members: [goggins, carmack]
+
+recipient_groups:
+  family:
+    members:
+      - spouse@gmail.com
+      - mom@gmail.com

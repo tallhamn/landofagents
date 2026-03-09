@@ -1,0 +1,60 @@
+hook: claude-code
+build:
+  dockerfile: Dockerfile
+  files:
+    - proxy-setup.js
+    - entrypoint.sh
+    - command-guard.sh
+env:
+  - CLAUDE_CODE_OAUTH_TOKEN
+  - ANTHROPIC_API_KEY
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - AWS_SESSION_TOKEN
+  - AWS_REGION
+  - AWS_DEFAULT_REGION
+  - AWS_PROFILE
+  - GOOGLE_APPLICATION_CREDENTIALS
+  - GOOGLE_CLOUD_PROJECT
+  - GOOGLE_CLOUD_LOCATION
+  - VERTEX_REGION
+  - AZURE_OPENAI_API_KEY
+  - AZURE_OPENAI_ENDPOINT
+  - AZURE_API_VERSION
+base_cedar: |
+  // Claude Code: API access + OAuth + telemetry
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"platform.claude.com"
+  );
+
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"claude.ai"
+  );
+
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"api.anthropic.com"
+  );
+
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"sentry.io"
+  );
+
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"statsig.anthropic.com"
+  );
+
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"http-intake.logs.us5.datadoghq.com"
+  );

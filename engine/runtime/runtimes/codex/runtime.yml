@@ -1,0 +1,15 @@
+hook: codex
+build:
+  dockerfile: Dockerfile
+  files:
+    - proxy-setup.js
+    - entrypoint.sh
+env:
+  - OPENAI_API_KEY
+base_cedar: |
+  // Codex: OpenAI API access
+  permit(
+    principal,
+    action == Action::"http:Request",
+    resource == Resource::"api.openai.com"
+  );
