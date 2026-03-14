@@ -17,6 +17,24 @@ func writeTestPolicy(t *testing.T, dir, name, content string) string {
 	return path
 }
 
+func TestCedarEscapeID(t *testing.T) {
+	tests := []struct {
+		input, want string
+	}{
+		{"goggins", "goggins"},
+		{`has"quote`, `has\"quote`},
+		{`has\backslash`, `has\\backslash`},
+		{`both"and\`, `both\"and\\`},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		got := CedarEscapeID(tt.input)
+		if got != tt.want {
+			t.Errorf("CedarEscapeID(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
 func TestCedarPermit(t *testing.T) {
 	dir := t.TempDir()
 

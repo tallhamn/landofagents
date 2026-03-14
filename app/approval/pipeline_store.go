@@ -16,13 +16,13 @@ import (
 // Returns the active path.
 func (p *Pipeline) WriteActivePolicy(proposal ProposalWithCedar) (string, error) {
 	activeDir := filepath.Join(p.cfg.KitDir, "policies", "active")
-	if err := os.MkdirAll(activeDir, 0755); err != nil {
+	if err := os.MkdirAll(activeDir, 0750); err != nil {
 		return "", fmt.Errorf("create active policies dir: %w", err)
 	}
 
 	filename := sanitizePolicyFilename(proposal.Filename)
 	path := filepath.Join(activeDir, filename)
-	if err := os.WriteFile(path, []byte(proposal.Cedar), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(proposal.Cedar), 0640); err != nil {
 		return "", fmt.Errorf("write active policy: %w", err)
 	}
 	if err := p.logLifecycleEvent(proposal.Agent, "policy:Approve", filename, map[string]any{

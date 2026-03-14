@@ -62,6 +62,12 @@ func NewServer(kitDir, agent, runID string, logger auditWriter, mode Mode) *Serv
 	}
 }
 
+func (s *Server) logAudit(r audit.Record) {
+	if s.logger != nil {
+		s.logger.Log(r)
+	}
+}
+
 func normalizeMode(mode Mode) Mode {
 	switch strings.ToLower(string(mode)) {
 	case "", string(ModeEnforce):

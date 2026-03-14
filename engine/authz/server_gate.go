@@ -19,7 +19,7 @@ import (
 func (s *Server) handleApproveWait(w http.ResponseWriter, r *http.Request, domain, reason, scope string, startTime time.Time) {
 	latency := time.Since(startTime).Milliseconds()
 	log.Printf("authz: DENY %s %s (%dms) — waiting for approval (timeout %s)", s.agent, domain, latency, s.ApproveTimeout)
-	s.logger.Log(audit.Record{
+	s.logAudit(audit.Record{
 		Agent:        s.agent,
 		Scope:        scope,
 		Action:       "http:Request",
@@ -46,7 +46,7 @@ func (s *Server) handleApproveWait(w http.ResponseWriter, r *http.Request, domai
 			case recheckAllow:
 				totalLatency := time.Since(startTime).Milliseconds()
 				log.Printf("authz: APPROVED %s %s (%dms) — permission granted during wait", s.agent, domain, totalLatency)
-				s.logger.Log(audit.Record{
+				s.logAudit(audit.Record{
 					Agent:        s.agent,
 					Scope:        scope,
 					Action:       "http:Request",
@@ -64,7 +64,7 @@ func (s *Server) handleApproveWait(w http.ResponseWriter, r *http.Request, domai
 				totalLatency := time.Since(startTime).Milliseconds()
 				blockReason := "Blocked once by operator during gate wait"
 				log.Printf("authz: DENY-ONCE %s %s (%dms) — blocked during wait", s.agent, domain, totalLatency)
-				s.logger.Log(audit.Record{
+				s.logAudit(audit.Record{
 					Agent:        s.agent,
 					Scope:        scope,
 					Action:       "http:Request",

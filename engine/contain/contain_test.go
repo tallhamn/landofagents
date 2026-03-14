@@ -341,7 +341,10 @@ func TestResolveUserVolumes_UseOnlyExtraVolumes(t *testing.T) {
 	extraVolumes := []string{
 		"/srv/loa/projects/subset:/projects/subset:ro",
 	}
-	got := resolveUserVolumes(agentVolumes, extraVolumes, nil, true)
+	got, err := resolveUserVolumes(agentVolumes, extraVolumes, nil, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 1 || got[0] != "/srv/loa/projects/subset:/projects/subset:ro" {
 		t.Fatalf("volumes=%v", got)
 	}
@@ -354,7 +357,10 @@ func TestResolveUserVolumes_MergeMode(t *testing.T) {
 	extraVolumes := []string{
 		"/srv/loa/projects/subset:/projects/subset:ro",
 	}
-	got := resolveUserVolumes(agentVolumes, extraVolumes, nil, false)
+	got, err := resolveUserVolumes(agentVolumes, extraVolumes, nil, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 2 {
 		t.Fatalf("volumes=%v", got)
 	}
@@ -368,7 +374,10 @@ func TestResolveUserVolumes_SkipsManagedTargetConflicts(t *testing.T) {
 		"/srv/loa/shared:/workspace:rw",
 		"/srv/loa/logs:/logs:rw",
 	}
-	got := resolveUserVolumes(agentVolumes, nil, []string{"/workspace"}, false)
+	got, err := resolveUserVolumes(agentVolumes, nil, []string{"/workspace"}, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 1 || got[0] != "/srv/loa/logs:/logs:rw" {
 		t.Fatalf("volumes=%v", got)
 	}
@@ -612,4 +621,52 @@ func makeFakeModuleRoot(t *testing.T) string {
 		t.Fatalf("write cmd/loa/main.go: %v", err)
 	}
 	return moduleRoot
+}
+
+func TestValidateHostPath(t *testing.T) {
+	tests := []struct {
+		path    string
+		wantErr bool
+	}{
+		{"/home/user/code", false},
+		{"/srv/loa/data", false},
+		{"/", true},
+		{"/etc", true},
+		{"/proc", true},
+		{"/sys", true},
+		{"/dev", true},
+		{"/boot", true},
+		{"/var/run/docker.sock", true},
+		{"/run/docker.sock", true},
+		{"/etc/../etc", true},             // path traversal
+		{"/home/user/../../../etc", true},  // path traversal
+	}
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			err := validateHostPath(tt.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateHostPath(%q) error = %v, wantErr %v", tt.path, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestResolveUserVolumes_RejectsForbiddenPaths(t *testing.T) {
+	_, err := resolveUserVolumes([]string{"/etc:/container/etc:ro"}, nil, nil, false)
+	if err == nil {
+		t.Fatal("expected error for /etc mount, got nil")
+	}
+
+	_, err = resolveUserVolumes([]string{"/var/run/docker.sock:/var/run/docker.sock"}, nil, nil, false)
+	if err == nil {
+		t.Fatal("expected error for docker socket mount, got nil")
+	}
+
+	vols, err := resolveUserVolumes([]string{"/home/user/code:/workspace:rw"}, nil, nil, false)
+	if err != nil {
+		t.Fatalf("unexpected error for safe path: %v", err)
+	}
+	if len(vols) != 1 {
+		t.Fatalf("expected 1 volume, got %d", len(vols))
+	}
 }

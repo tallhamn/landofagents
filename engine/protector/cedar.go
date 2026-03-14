@@ -121,11 +121,22 @@ func (e *CedarEvaluator) Evaluate(req CedarRequest) (CedarDecision, error) {
 		Context:   context,
 	}
 
-	decision, _ := cedar.Authorize(e.policySet, e.entities, cedarReq)
+	decision, diag := cedar.Authorize(e.policySet, e.entities, cedarReq)
+	if len(diag.Errors) > 0 {
+		return CedarDeny, fmt.Errorf("cedar evaluation errors: %v", diag.Errors)
+	}
 	if decision == cedar.Allow {
 		return CedarPermit, nil
 	}
 	return CedarDeny, nil
+}
+
+// CedarEscapeID escapes a string for use as a Cedar entity ID.
+// It escapes backslashes and double quotes to prevent injection.
+func CedarEscapeID(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	return s
 }
 
 // Cleanup is a no-op since the library evaluator has no temp files.

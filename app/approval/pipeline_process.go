@@ -113,13 +113,19 @@ func templateProposal(d audit.Record) ProposalWithCedar {
 	}
 }
 
+func cedarEscapeID(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	return s
+}
+
 func templateCedar(d audit.Record) string {
 	return fmt.Sprintf(`permit(
   principal == Agent::"%s",
   action == Action::"%s",
   resource == Resource::"%s"
 );
-`, d.Agent, d.Action, d.Resource)
+`, cedarEscapeID(d.Agent), cedarEscapeID(d.Action), cedarEscapeID(d.Resource))
 }
 
 func templateFilename(d audit.Record) string {

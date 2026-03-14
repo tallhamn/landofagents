@@ -44,7 +44,7 @@ func saveState(kitDir string, st stateFile) error {
 		st.Workers = map[string]Record{}
 	}
 	dir := workersDir(kitDir)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return fmt.Errorf("create workers dir: %w", err)
 	}
 	path := workersStatePath(kitDir)
@@ -53,7 +53,7 @@ func saveState(kitDir string, st stateFile) error {
 		return fmt.Errorf("marshal worker state: %w", err)
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+	if err := os.WriteFile(tmp, data, 0o640); err != nil {
 		return fmt.Errorf("write worker state temp: %w", err)
 	}
 	if err := os.Rename(tmp, path); err != nil {
@@ -119,11 +119,11 @@ func withLockedStateWrite(kitDir string, fn func(st *stateFile) error) error {
 
 func openStateLock(kitDir string) (*os.File, error) {
 	dir := workersDir(kitDir)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return nil, fmt.Errorf("create workers dir: %w", err)
 	}
 	lockPath := filepath.Join(dir, "state.lock")
-	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o644)
+	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o640)
 	if err != nil {
 		return nil, fmt.Errorf("open worker state lock: %w", err)
 	}

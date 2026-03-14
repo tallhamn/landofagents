@@ -198,8 +198,16 @@ func TestControlClientStatusErrorPropagation(t *testing.T) {
 
 func shortSocketPath(t *testing.T) string {
 	t.Helper()
-	name := fmt.Sprintf("loa-ctrl-%d-%d.sock", os.Getpid(), time.Now().UnixNano())
-	return filepath.Join(t.TempDir(), name)
+	// Use os.MkdirTemp with a short prefix instead of t.TempDir() because
+	// t.TempDir() includes the full test/subtest name, which can exceed the
+	// 108-character Unix socket path limit.
+	dir, err := os.MkdirTemp("", "loa")
+	if err != nil {
+		t.Fatalf("mkdirtemp: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+	name := fmt.Sprintf("ctrl-%d.sock", time.Now().UnixNano())
+	return filepath.Join(dir, name)
 }
 
 func newTestUnixListener(t *testing.T) (net.Listener, string) {

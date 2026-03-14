@@ -49,7 +49,31 @@ func parseMountSpec(spec string) (host, container, mode string) {
 	return host, container, mode
 }
 
-func resolveUserVolumes(agentVolumes, extraVolumes, managedTargets []string, useOnlyExtra bool) []string {
+// forbiddenHostPaths are host paths that must never be mounted into agent containers.
+var forbiddenHostPaths = []string{
+	"/",
+	"/boot",
+	"/dev",
+	"/etc",
+	"/proc",
+	"/sys",
+	"/var/run/docker.sock",
+	"/run/docker.sock",
+}
+
+// validateHostPath checks that a host mount source is not a forbidden system path.
+// Returns an error if the path is forbidden.
+func validateHostPath(hostPath string) error {
+	cleaned := filepath.Clean(hostPath)
+	for _, forbidden := range forbiddenHostPaths {
+		if cleaned == forbidden {
+			return fmt.Errorf("mount source %q is a protected system path", cleaned)
+		}
+	}
+	return nil
+}
+
+func resolveUserVolumes(agentVolumes, extraVolumes, managedTargets []string, useOnlyExtra bool) ([]string, error) {
 	var source []string
 	if useOnlyExtra {
 		source = append(source, extraVolumes...)
@@ -63,9 +87,13 @@ func resolveUserVolumes(agentVolumes, extraVolumes, managedTargets []string, use
 		if volumeConflictsWithTargets(expanded, managedTargets) {
 			continue
 		}
+		host, _, _ := parseMountSpec(expanded)
+		if err := validateHostPath(host); err != nil {
+			return nil, err
+		}
 		volumes = append(volumes, expanded)
 	}
-	return volumes
+	return volumes, nil
 }
 
 // expandTildeVolume expands ~ in the host portion of a volume mount string.

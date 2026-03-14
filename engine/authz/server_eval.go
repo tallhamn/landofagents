@@ -11,9 +11,9 @@ import (
 
 func evaluateRequest(eval *protector.CedarEvaluator, agent, host string) (protector.CedarDecision, string, error) {
 	decision, err := eval.Evaluate(protector.CedarRequest{
-		Principal: fmt.Sprintf(`Agent::"%s"`, agent),
+		Principal: fmt.Sprintf(`Agent::"%s"`, protector.CedarEscapeID(agent)),
 		Action:    `Action::"http:Request"`,
-		Resource:  fmt.Sprintf(`Resource::"%s"`, host),
+		Resource:  fmt.Sprintf(`Resource::"%s"`, protector.CedarEscapeID(host)),
 	})
 	if err != nil {
 		return protector.CedarError, host, err
@@ -27,9 +27,9 @@ func evaluateRequest(eval *protector.CedarEvaluator, agent, host string) (protec
 		return decision, host, nil
 	}
 	decision, err = eval.Evaluate(protector.CedarRequest{
-		Principal: fmt.Sprintf(`Agent::"%s"`, agent),
+		Principal: fmt.Sprintf(`Agent::"%s"`, protector.CedarEscapeID(agent)),
 		Action:    `Action::"http:Request"`,
-		Resource:  fmt.Sprintf(`Resource::"%s"`, service),
+		Resource:  fmt.Sprintf(`Resource::"%s"`, protector.CedarEscapeID(service)),
 	})
 	return decision, service, err
 }

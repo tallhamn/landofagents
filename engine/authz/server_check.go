@@ -36,7 +36,7 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("authz: evaluation error for %s: %v", meta.Domain, err)
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",
@@ -57,7 +57,7 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Printf("authz: ALLOW %s %s %s (%dms)", s.agent, meta.Method, meta.Domain, latency)
 		}
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",
@@ -77,7 +77,7 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 	switch s.mode {
 	case ModeLog:
 		log.Printf("authz: LOG-DENY %s %s %s (%dms) — would be denied", s.agent, meta.Method, meta.Domain, latency)
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",
@@ -95,7 +95,7 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		s.handleApproveWait(w, r, meta.Domain, reason, scope, start)
 	default:
 		log.Printf("authz: DENY %s %s %s (%dms) — %s %s", s.agent, meta.Method, meta.Domain, latency, meta.Method, meta.Path)
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",
@@ -114,7 +114,7 @@ func (s *Server) denyMissingDomain(w http.ResponseWriter, method string, start t
 	latency := time.Since(start).Milliseconds()
 	reason := "missing destination host metadata"
 	log.Printf("authz: DENY %s %s (%dms) — %s", s.agent, method, latency, reason)
-	s.logger.Log(audit.Record{
+	s.logAudit(audit.Record{
 		Agent:        s.agent,
 		Scope:        s.agent,
 		Action:       "http:Request",
@@ -138,7 +138,7 @@ func (s *Server) handleOneTimeDecision(w http.ResponseWriter, meta checkMeta, st
 	switch one.Effect {
 	case oneshot.EffectAllow:
 		log.Printf("authz: ALLOW-ONCE %s %s %s (%dms)", s.agent, meta.Method, meta.Domain, latency)
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",
@@ -155,7 +155,7 @@ func (s *Server) handleOneTimeDecision(w http.ResponseWriter, meta checkMeta, st
 	case oneshot.EffectDeny:
 		reason := fmt.Sprintf("Blocked once by operator: %s %s", meta.Method, meta.Path)
 		log.Printf("authz: DENY-ONCE %s %s %s (%dms)", s.agent, meta.Method, meta.Domain, latency)
-		s.logger.Log(audit.Record{
+		s.logAudit(audit.Record{
 			Agent:        s.agent,
 			Scope:        scope,
 			Action:       "http:Request",

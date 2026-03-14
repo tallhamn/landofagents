@@ -75,14 +75,14 @@ func (p *Protector) Evaluate(command string) Decision {
 	// Step 3: Evaluate each segment against Cedar
 	// For compound commands, all segments must be permitted.
 	for _, seg := range cl.Segments {
-		principal := fmt.Sprintf(`Agent::"%s"`, p.agent)
-		action := fmt.Sprintf(`Action::"%s"`, seg.Action)
+		principal := fmt.Sprintf(`Agent::"%s"`, CedarEscapeID(p.agent))
+		action := fmt.Sprintf(`Action::"%s"`, CedarEscapeID(seg.Action))
 
 		resource := seg.Resource
 		if resource == "" {
 			resource = "_"
 		}
-		resourceStr := fmt.Sprintf(`Resource::"%s"`, resource)
+		resourceStr := fmt.Sprintf(`Resource::"%s"`, CedarEscapeID(resource))
 
 		cedarDecision, err := p.cedar.Evaluate(CedarRequest{
 			Principal: principal,

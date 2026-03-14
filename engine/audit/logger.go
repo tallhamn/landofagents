@@ -43,7 +43,7 @@ type Logger struct {
 // NewLogger creates a new audit logger that writes to the given directory.
 // The directory is created if it doesn't exist.
 func NewLogger(dir string) (*Logger, error) {
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return nil, fmt.Errorf("create audit dir: %w", err)
 	}
 	return &Logger{
@@ -80,7 +80,7 @@ func (l *Logger) Log(r Record) error {
 	}
 	data = append(data, '\n')
 
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		return fmt.Errorf("open audit file: %w", err)
 	}

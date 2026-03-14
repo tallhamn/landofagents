@@ -53,7 +53,10 @@ func SetupEnvironment(opts Options) (*Environment, error) {
 	}
 
 	managedTargets := hook.ManagedMountTargets()
-	volumes := resolveUserVolumes(agentConfig.Volumes, opts.ExtraVolumes, managedTargets, opts.UseOnlyExtraVolumes)
+	volumes, err := resolveUserVolumes(agentConfig.Volumes, opts.ExtraVolumes, managedTargets, opts.UseOnlyExtraVolumes)
+	if err != nil {
+		return nil, fmt.Errorf("resolve volumes: %w", err)
+	}
 
 	workspaceDir := filepath.Join(kitDir, "workspaces", opts.AgentName)
 	if err := os.MkdirAll(workspaceDir, 0755); err != nil {
