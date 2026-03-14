@@ -21,35 +21,7 @@ func runPolicy(args []string) {
 
 	switch args[0] {
 	case "list":
-		active, err := pipeline.ListActivePolicies()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error listing active policies: %v\n", err)
-			os.Exit(1)
-		}
-		info := readActivePolicyInfo(kitDir(), active)
-		allow, deny, unknown := countPolicyEffects(info)
-		allScope, agentScope := countPolicyScopes(info)
-		fmt.Printf("🟢 Active (%d)\n", len(active))
-		fmt.Printf("  Summary: %d allow, %d deny", allow, deny)
-		if unknown > 0 {
-			fmt.Printf(", %d unknown", unknown)
-		}
-		fmt.Printf("\n")
-		fmt.Printf("  Scope: %d all-agents, %d agent-specific\n", allScope, agentScope)
-		if len(info) == 0 {
-			fmt.Printf("  (none)\n")
-		} else {
-			fmt.Printf("  Files:\n")
-			for _, p := range info {
-				scopeLabel := p.Scope
-				if scopeLabel == "agent" {
-					scopeLabel = "agent"
-				} else {
-					scopeLabel = "all"
-				}
-				fmt.Printf("    - [%s|%s] %s\n", scopeLabel, p.Effect, p.Name)
-			}
-		}
+		runPolicyList(kitDir(), pipeline)
 
 	case "effective":
 		runPolicyEffective(args[1:])

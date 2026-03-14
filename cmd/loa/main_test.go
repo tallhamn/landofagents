@@ -1346,12 +1346,13 @@ func TestRunPolicyListActiveFormatting(t *testing.T) {
 	out := cap.Stop()
 
 	want := []string{
-		"🟢 Active (2)",
-		"Summary: 1 allow, 1 deny",
-		"Scope: 1 all-agents, 1 agent-specific",
-		"Files:",
-		"[all|deny] all-http-Request-news-yahoo-com.cedar",
-		"[agent|allow] hackerman-http-Request-news-google-com.cedar",
+		"Active policies: 2 files, 1 allow rules, 1 deny rules",
+		"Allow:",
+		"hackerman",
+		"news.google.com",
+		"Deny:",
+		"all agents",
+		"news.yahoo.com",
 	}
 	for _, fragment := range want {
 		if !strings.Contains(out, fragment) {

@@ -23,7 +23,8 @@ type cedarRule struct {
 }
 
 var (
-	cedarStmtPattern     = regexp.MustCompile(`(?s)(permit|forbid)\s*\((.*?)\);`)
-	cedarActionPattern   = regexp.MustCompile(`Action::"([^"]+)"`)
-	cedarResourcePattern = regexp.MustCompile(`Resource::"([^"]+)"`)
+	cedarStmtPattern      = regexp.MustCompile(`(?s)(permit|forbid)\s*\((.*?)\);`)
+	cedarActionPattern    = regexp.MustCompile(`Action::"([^"]+)"`)
+	cedarResourcePattern  = regexp.MustCompile(`Resource::"([^"]+)"`)
+	cedarPrincipalPattern = regexp.MustCompile(`Agent::"([^"]+)"`)
 )
