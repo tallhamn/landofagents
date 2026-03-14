@@ -34,7 +34,6 @@ func runPolicyList(kit string, pipeline *approval.Pipeline) {
 	}
 
 	var policies []parsedPolicy
-	var empty []string // files with no rules (comment-only runtime placeholders)
 
 	for _, name := range active {
 		path := filepath.Join(kit, "policies", "active", name)
@@ -43,9 +42,8 @@ func runPolicyList(kit string, pipeline *approval.Pipeline) {
 			continue
 		}
 		rules := extractCedarRules(string(data))
-		// If the only rule is the unknown fallback, it's an empty/comment-only file.
+		// Skip empty/comment-only files — they have no authorization effect.
 		if len(rules) == 1 && rules[0].Effect == "unknown" && rules[0].Action == "*" {
-			empty = append(empty, name)
 			continue
 		}
 
@@ -128,14 +126,11 @@ func runPolicyList(kit string, pipeline *approval.Pipeline) {
 		denyCount += len(ar.resources)
 	}
 
-	fmt.Printf("Active policies: %d files, %d allow rules, %d deny rules\n\n", len(active), allowCount, denyCount)
+	ruleCount := allowCount + denyCount
+	fmt.Printf("Active policies: %d rules across %d files\n\n", ruleCount, len(policies))
 
 	printRuleSection("Allow", sortedAgents(allowByAgent))
 	printRuleSection("Deny", sortedAgents(denyByAgent))
-
-	if len(empty) > 0 {
-		fmt.Printf("  Placeholder (no rules): %s\n", strings.Join(empty, ", "))
-	}
 }
 
 func printRuleSection(label string, agents []*policyListEntry) {

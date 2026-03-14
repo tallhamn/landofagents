@@ -1346,7 +1346,7 @@ func TestRunPolicyListActiveFormatting(t *testing.T) {
 	out := cap.Stop()
 
 	want := []string{
-		"Active policies: 2 files, 1 allow rules, 1 deny rules",
+		"Active policies: 2 rules across 2 files",
 		"Allow:",
 		"hackerman",
 		"news.google.com",
