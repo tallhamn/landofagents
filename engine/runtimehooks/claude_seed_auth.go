@@ -29,6 +29,10 @@ func hasHostClaudeOAuth() bool {
 // into the agent's config directory so the container starts pre-authenticated.
 func seedClaudeAuth(configDir string) error {
 	credPath := filepath.Join(configDir, ".credentials.json")
+	// Reject symlinks at the destination to prevent host-write redirects.
+	if info, lstatErr := os.Lstat(credPath); lstatErr == nil && info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("refusing to write credentials through symlink: %s", credPath)
+	}
 	existingCredData, existingErr := os.ReadFile(credPath)
 	existingExists := existingErr == nil
 	if existingErr != nil && !os.IsNotExist(existingErr) {
@@ -41,7 +45,7 @@ func seedClaudeAuth(configDir string) error {
 		if existingExists && bytes.Equal(existingCredData, hostCredData) {
 			return nil
 		}
-		return os.WriteFile(credPath, hostCredData, 0600)
+		return safeWriteFile(credPath, hostCredData, 0600)
 	}
 
 	// If host creds aren't currently available, keep existing workspace creds.

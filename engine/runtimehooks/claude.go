@@ -21,7 +21,7 @@ func (claudeCodeHook) ManagedMountTargets() []string {
 
 func (claudeCodeHook) Prepare(input PrepareInput) (PrepareOutput, error) {
 	configDir := filepath.Join(input.WorkspaceDir, ".claude")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := safeCreateDir(configDir, 0755); err != nil {
 		return PrepareOutput{}, fmt.Errorf("create claude config dir: %w", err)
 	}
 

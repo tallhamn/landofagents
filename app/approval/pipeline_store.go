@@ -13,6 +13,8 @@ import (
 )
 
 // WriteActivePolicy writes a proposal's Cedar directly to policies/active.
+// If a policy with the same filename already exists, it is replaced and the
+// overwrite is recorded in the lifecycle audit event.
 // Returns the active path.
 func (p *Pipeline) WriteActivePolicy(proposal ProposalWithCedar) (string, error) {
 	activeDir := filepath.Join(p.cfg.KitDir, "policies", "active")
@@ -22,13 +24,24 @@ func (p *Pipeline) WriteActivePolicy(proposal ProposalWithCedar) (string, error)
 
 	filename := sanitizePolicyFilename(proposal.Filename)
 	path := filepath.Join(activeDir, filename)
+
+	// Detect and record overwrites so the audit trail captures replacements.
+	var overwrote bool
+	if _, err := os.Stat(path); err == nil {
+		overwrote = true
+	}
+
 	if err := os.WriteFile(path, []byte(proposal.Cedar), 0640); err != nil {
 		return "", fmt.Errorf("write active policy: %w", err)
 	}
-	if err := p.logLifecycleEvent(proposal.Agent, "policy:Approve", filename, map[string]any{
+	ctx := map[string]any{
 		"state": "active",
 		"path":  path,
-	}); err != nil {
+	}
+	if overwrote {
+		ctx["overwrote_existing"] = true
+	}
+	if err := p.logLifecycleEvent(proposal.Agent, "policy:Approve", filename, ctx); err != nil {
 		return "", fmt.Errorf("audit approve event: %w", err)
 	}
 	return path, nil

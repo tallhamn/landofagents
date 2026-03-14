@@ -58,6 +58,9 @@ func (p *Prompter) renderStandardHeader(proposal ProposalWithCedar, denials []au
 	if proposal.Reasoning != "" {
 		fmt.Fprintf(p.out, "Reasoning: %s\n", proposal.Reasoning)
 	}
+	if proposal.Filename != "" {
+		fmt.Fprintf(p.out, "Policy file: %s\n", proposal.Filename)
+	}
 	if policy := FormatCedarForDisplay(proposal.Cedar, p.out); policy != "" {
 		fmt.Fprintf(p.out, "\nPolicy Preview:\n%s\n", indentLines(p.blueURLs(policy), "  "))
 	}
