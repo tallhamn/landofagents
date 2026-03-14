@@ -16,7 +16,7 @@ func buildLoa(outPath string) error {
 			"Either run from the source directory, or set LOA_SOURCE_DIR:\n" +
 			"  export LOA_SOURCE_DIR=/path/to/land-of-agents")
 	}
-	cmd := exec.Command("go", "build", "-o", outPath, "./cmd/loa")
+	cmd := exec.Command("go", "build", "-buildvcs=false", "-o", outPath, "./cmd/loa")
 	cmd.Env = append(os.Environ(),
 		"GOOS=linux",
 		"GOARCH="+goarch,
