@@ -126,7 +126,7 @@ func activateApprovedProposal(pipeline *approval.Pipeline, prop approval.Proposa
 		prop = rewriteForbidPolicy(prop)
 	}
 
-	applyResult, err := stageAndMaybeActivatePolicy(pipeline, prop, true)
+	activePath, err := applyPolicy(pipeline, prop)
 	if err != nil {
 		return "", err
 	}
@@ -135,7 +135,7 @@ func activateApprovedProposal(pipeline *approval.Pipeline, prop approval.Proposa
 	if result.Scope == approval.AllAgents {
 		scopeLabel = "all agents"
 	}
-	activeFile := filepath.Base(applyResult.ActivePath)
+	activeFile := filepath.Base(activePath)
 	if result.Effect == approval.PolicyForbid {
 		return fmt.Sprintf("🔴 Block policy active for %s → %s", scopeLabel, activeFile), nil
 	}

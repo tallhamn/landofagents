@@ -85,7 +85,7 @@ Set per-agent at creation (`--mode`). Default is `ask`.
 ## Policy Lifecycle
 
 ```
-denied event -> proposal -> staged policy -> active policy
+denied event -> proposal -> active policy
 ```
 
 Denials appear in `loa inbox`. The approval pipeline proposes Cedar policy (LLM-assisted or template fallback). You review and approve. Next time, the request is allowed automatically.

@@ -41,7 +41,7 @@ Dependency rule: `cmd/loa -> app -> engine -> gap`. Never import upward.
 
 Each `loa run` creates 3 Docker containers: agent runtime + Envoy proxy + LOA authz sidecar. Outbound traffic flows: agent -> Envoy -> authz (Cedar eval) -> internet.
 
-Policy lifecycle: denied event -> proposal -> staged -> active. Approvals can be LLM-assisted (advocate/codifier) or template-based.
+Policy lifecycle: denied event -> proposal -> active. Approvals can be LLM-assisted (advocate/codifier) or template-based.
 
 Modes: `ask` (deny=hold until approved, default), `log` (deny=allow+log), `enforce` (deny=403).
 

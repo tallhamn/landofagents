@@ -695,7 +695,7 @@ func TestAllowViaRegistrableDomainPolicy_DNSE(t *testing.T) {
 
 func copyTestKit(t *testing.T, src, dst string) {
 	t.Helper()
-	for _, subdir := range []string{"config", "policies", filepath.Join("policies", "active"), filepath.Join("policies", "staged")} {
+	for _, subdir := range []string{"config", "policies", filepath.Join("policies", "active")} {
 		srcDir := filepath.Join(src, subdir)
 		dstDir := filepath.Join(dst, subdir)
 		os.MkdirAll(dstDir, 0755)

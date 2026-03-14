@@ -21,7 +21,6 @@ func runDoctor(args []string) {
 	kit := kitDir()
 	auditDir := filepath.Join(kit, "audit")
 	activePoliciesDir := filepath.Join(kit, "policies", "active")
-	stagedPoliciesDir := filepath.Join(kit, "policies", "staged")
 	kitSource := "default path (~/land-of-agents)"
 	if strings.TrimSpace(os.Getenv("LOA_KIT")) != "" {
 		kitSource = "$LOA_KIT"
@@ -36,7 +35,7 @@ func runDoctor(args []string) {
 	health := "OK"
 	var healthReasons []string
 
-	requiredDirs := []string{"config", "policies", "policies/staged", "policies/active", "audit"}
+	requiredDirs := []string{"config", "policies", "policies/active", "audit"}
 	missing := []string{}
 	for _, sub := range requiredDirs {
 		p := filepath.Join(kit, sub)
@@ -124,7 +123,6 @@ func runDoctor(args []string) {
 		}
 		fmt.Printf("  audit log dir: %s (%s)\n", auditDir, pathKind(auditDir))
 		fmt.Printf("  active policies dir: %s (%s)\n", activePoliciesDir, pathKind(activePoliciesDir))
-		fmt.Printf("  staged policies dir: %s (%s)\n", stagedPoliciesDir, pathKind(stagedPoliciesDir))
 	} else {
 		printDoctorSection("📁 Data Sources")
 		fmt.Printf("  LOA home: %s\n", kit)

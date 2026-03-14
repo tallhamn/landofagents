@@ -17,7 +17,7 @@ func runPolicySuggest(args []string) {
 	sinceRaw := fs.String("since", "24h", "Only include recent activity (e.g. 24h, 7d, 90m)")
 	networkScope := fs.String("network-scope", "host", "Network suggestion scope: host|domain")
 	limit := fs.Int("limit", 10, "Maximum suggestions per section")
-	interactive := fs.Bool("interactive", isInteractiveTerminal(), "Interactively stage/activate network suggestions")
+	interactive := fs.Bool("interactive", isInteractiveTerminal(), "Interactively activate network suggestions")
 	showCedar := fs.Bool("show-cedar", false, "Include Cedar snippets in non-interactive output")
 	fs.Parse(args)
 
@@ -90,7 +90,7 @@ func runPolicySuggest(args []string) {
 		runPolicySuggestInteractive(advisor, *agentName, kit, suggestions.Network, *limit, *networkScope)
 	} else if len(suggestions.Network) > 0 {
 		fmt.Println()
-		fmt.Printf("Tip: rerun with --interactive to stage/activate network suggestions.\n")
+		fmt.Printf("Tip: rerun with --interactive to activate network suggestions.\n")
 	}
 }
 

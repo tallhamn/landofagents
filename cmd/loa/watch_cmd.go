@@ -104,7 +104,7 @@ func runWatchLoop(ctx context.Context, cfg watchLoopConfig) error {
 		default:
 			fmt.Fprintf(os.Stderr, "Watching %s approval queue... (Ctrl-C to stop)\n\n", target)
 		}
-		fmt.Fprintf(os.Stderr, "Policy store: %s\n\n", filepath.Join(cfg.KitDir, "policies", "{staged,active}"))
+		fmt.Fprintf(os.Stderr, "Policy store: %s\n\n", filepath.Join(cfg.KitDir, "policies", "active"))
 	}
 
 	for {

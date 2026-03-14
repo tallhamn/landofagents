@@ -118,19 +118,19 @@ func runPolicySuggestInteractive(advisor *loaadvisor.Service, agentName, kit str
 		}
 	nextSuggestion:
 	}
-	fmt.Printf("\nReview complete. Use 'loa policy list --staged' or '--active' to inspect results.\n")
+	fmt.Printf("\nReview complete. Use 'loa policy list' to inspect results.\n")
 }
 
 func activateSuggestedPolicy(pipeline *approval.Pipeline, prop approval.ProposalWithCedar, isBlock bool) bool {
-	applyResult, err := stageAndMaybeActivatePolicy(pipeline, prop, true)
+	activePath, err := applyPolicy(pipeline, prop)
 	if err != nil {
 		fmt.Printf("Error applying policy: %v\n", err)
 		return false
 	}
 	if isBlock {
-		fmt.Printf("🔴 Activated block: %s\n", filepath.Base(applyResult.ActivePath))
+		fmt.Printf("🔴 Activated block: %s\n", filepath.Base(activePath))
 	} else {
-		fmt.Printf("🟢 Activated: %s\n", filepath.Base(applyResult.ActivePath))
+		fmt.Printf("🟢 Activated: %s\n", filepath.Base(activePath))
 	}
 	return true
 }

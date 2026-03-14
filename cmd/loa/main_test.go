@@ -869,7 +869,7 @@ func TestSuggestedContainerMountTarget(t *testing.T) {
 
 func TestActivateApprovedProposal_AllAgentsDomain(t *testing.T) {
 	kit := t.TempDir()
-	for _, sub := range []string{"config", "policies", "policies/staged", "policies/active", "audit"} {
+	for _, sub := range []string{"config", "policies", "policies/active", "audit"} {
 		if err := os.MkdirAll(filepath.Join(kit, sub), 0o755); err != nil {
 			t.Fatalf("mkdir %s: %v", sub, err)
 		}
@@ -1342,7 +1342,7 @@ func TestRunPolicyListActiveFormatting(t *testing.T) {
 	}
 
 	cap := startStdoutCapture(t)
-	runPolicy([]string{"list", "--active"})
+	runPolicy([]string{"list"})
 	out := cap.Stop()
 
 	want := []string{
@@ -1660,7 +1660,7 @@ func TestRunPolicySuggest(t *testing.T) {
 		"Filesystem suggestions: 1",
 		"RW /opt/app",
 		"observed: 2 events",
-		"Tip: rerun with --interactive to stage/activate network suggestions.",
+		"Tip: rerun with --interactive to activate network suggestions.",
 	}
 	for _, c := range checks {
 		if !strings.Contains(out, c) {

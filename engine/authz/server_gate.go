@@ -15,7 +15,7 @@ import (
 
 // handleApproveWait holds the HTTP connection in gate mode, polling for
 // new active Cedar files until the request is permitted or the timeout expires.
-// The host-side `loa watch` stages and activates policies via the approval pipeline.
+// The host-side `loa watch` activates policies via the approval pipeline.
 func (s *Server) handleApproveWait(w http.ResponseWriter, r *http.Request, domain, reason, scope string, startTime time.Time) {
 	latency := time.Since(startTime).Milliseconds()
 	log.Printf("authz: DENY %s %s (%dms) — waiting for approval (timeout %s)", s.agent, domain, latency, s.ApproveTimeout)

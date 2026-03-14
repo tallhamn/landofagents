@@ -1,10 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,7 +13,7 @@ import (
 
 func runPolicy(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "Usage: loa policy <list|activate|effective|suggest> [arguments]\n")
+		fmt.Fprintf(os.Stderr, "Usage: loa policy <list|effective|suggest> [arguments]\n")
 		os.Exit(1)
 	}
 
@@ -23,92 +21,36 @@ func runPolicy(args []string) {
 
 	switch args[0] {
 	case "list":
-		fs := flag.NewFlagSet("policy list", flag.ExitOnError)
-		stagedOnly := fs.Bool("staged", false, "Show staged policies only")
-		activeOnly := fs.Bool("active", false, "Show active policies only")
-		fs.Parse(args[1:])
-
-		showStaged := *stagedOnly || (!*stagedOnly && !*activeOnly)
-		showActive := *activeOnly || (!*stagedOnly && !*activeOnly)
-
-		if showStaged {
-			staged, err := pipeline.ListStagedPolicies()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error listing staged policies: %v\n", err)
-				os.Exit(1)
-			}
-			fmt.Printf("🟨 Staged (%d)\n", len(staged))
-			if len(staged) == 0 {
-				fmt.Printf("  (none)\n")
-			} else {
-				for _, name := range staged {
-					fmt.Printf("  - %s\n", name)
-				}
-			}
-			fmt.Println()
-		}
-
-		if showActive {
-			active, err := pipeline.ListActivePolicies()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error listing active policies: %v\n", err)
-				os.Exit(1)
-			}
-			info := readActivePolicyInfo(kitDir(), active)
-			allow, deny, unknown := countPolicyEffects(info)
-			allScope, agentScope := countPolicyScopes(info)
-			fmt.Printf("🟢 Active (%d)\n", len(active))
-			fmt.Printf("  Summary: %d allow, %d deny", allow, deny)
-			if unknown > 0 {
-				fmt.Printf(", %d unknown", unknown)
-			}
-			fmt.Printf("\n")
-			fmt.Printf("  Scope: %d all-agents, %d agent-specific\n", allScope, agentScope)
-			if len(info) == 0 {
-				fmt.Printf("  (none)\n")
-			} else {
-				fmt.Printf("  Files:\n")
-				for _, p := range info {
-					scopeLabel := p.Scope
-					if scopeLabel == "agent" {
-						scopeLabel = "agent"
-					} else {
-						scopeLabel = "all"
-					}
-					fmt.Printf("    - [%s|%s] %s\n", scopeLabel, p.Effect, p.Name)
-				}
-			}
-		}
-
-	case "activate":
-		if len(args) < 2 {
-			fmt.Fprintf(os.Stderr, "Usage: loa policy activate <filename|all>\n")
-			os.Exit(1)
-		}
-		target := args[1]
-		if target == "all" {
-			activated, err := pipeline.ActivateAllStaged()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error activating staged policies: %v\n", err)
-				os.Exit(1)
-			}
-			if len(activated) == 0 {
-				fmt.Println("No staged policies to activate.")
-				return
-			}
-			fmt.Printf("Activated %d policies:\n", len(activated))
-			for _, path := range activated {
-				fmt.Printf("  %s\n", filepath.Base(path))
-			}
-			return
-		}
-
-		path, err := pipeline.ActivateStagedByName(target)
+		active, err := pipeline.ListActivePolicies()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error activating policy: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error listing active policies: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("Activated: %s\n", filepath.Base(path))
+		info := readActivePolicyInfo(kitDir(), active)
+		allow, deny, unknown := countPolicyEffects(info)
+		allScope, agentScope := countPolicyScopes(info)
+		fmt.Printf("🟢 Active (%d)\n", len(active))
+		fmt.Printf("  Summary: %d allow, %d deny", allow, deny)
+		if unknown > 0 {
+			fmt.Printf(", %d unknown", unknown)
+		}
+		fmt.Printf("\n")
+		fmt.Printf("  Scope: %d all-agents, %d agent-specific\n", allScope, agentScope)
+		if len(info) == 0 {
+			fmt.Printf("  (none)\n")
+		} else {
+			fmt.Printf("  Files:\n")
+			for _, p := range info {
+				scopeLabel := p.Scope
+				if scopeLabel == "agent" {
+					scopeLabel = "agent"
+				} else {
+					scopeLabel = "all"
+				}
+				fmt.Printf("    - [%s|%s] %s\n", scopeLabel, p.Effect, p.Name)
+			}
+		}
+
 	case "effective":
 		runPolicyEffective(args[1:])
 	case "suggest":

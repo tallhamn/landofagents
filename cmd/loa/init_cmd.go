@@ -16,7 +16,6 @@ func runInit(args []string) {
 	dirs := []string{
 		filepath.Join(dir, "config"),
 		filepath.Join(dir, "policies"),
-		filepath.Join(dir, "policies", "staged"),
 		filepath.Join(dir, "policies", "active"),
 		filepath.Join(dir, "runtimes"),
 		filepath.Join(dir, "audit"),

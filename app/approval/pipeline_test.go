@@ -53,7 +53,7 @@ func TestProcessFallback(t *testing.T) {
 	}
 }
 
-func TestStageAndActivatePolicy(t *testing.T) {
+func TestWriteActivePolicy(t *testing.T) {
 	kitDir := t.TempDir()
 	p := NewPipeline(PipelineConfig{KitDir: kitDir})
 
@@ -63,19 +63,19 @@ func TestStageAndActivatePolicy(t *testing.T) {
 		Filename: "goggins-http-wrike.cedar",
 	}
 
-	stagedPath, err := p.StagePolicy(proposal)
+	activePath, err := p.WriteActivePolicy(proposal)
 	if err != nil {
-		t.Fatalf("StagePolicy: %v", err)
+		t.Fatalf("WriteActivePolicy: %v", err)
 	}
 
-	if !strings.Contains(stagedPath, filepath.Join("policies", "staged")) {
-		t.Errorf("expected staged path under policies/staged, got: %s", stagedPath)
+	if !strings.Contains(activePath, filepath.Join("policies", "active")) {
+		t.Errorf("expected path under policies/active, got: %s", activePath)
 	}
-	if !strings.HasSuffix(stagedPath, "goggins-http-wrike.cedar") {
-		t.Errorf("unexpected staged path: %s", stagedPath)
+	if !strings.HasSuffix(activePath, "goggins-http-wrike.cedar") {
+		t.Errorf("unexpected path: %s", activePath)
 	}
 
-	data, err := os.ReadFile(stagedPath)
+	data, err := os.ReadFile(activePath)
 	if err != nil {
 		t.Fatalf("read written file: %v", err)
 	}
@@ -83,34 +83,7 @@ func TestStageAndActivatePolicy(t *testing.T) {
 		t.Errorf("file content mismatch:\ngot:  %s\nwant: %s", data, proposal.Cedar)
 	}
 
-	// Verify policies/staged directory was created
-	stagedDir := filepath.Join(kitDir, "policies", "staged")
-	info, err := os.Stat(stagedDir)
-	if err != nil {
-		t.Fatalf("staged dir: %v", err)
-	}
-	if !info.IsDir() {
-		t.Error("staged should be a directory")
-	}
-
-	activePath, err := p.ActivatePolicy(stagedPath)
-	if err != nil {
-		t.Fatalf("ActivatePolicy: %v", err)
-	}
-	if !strings.Contains(activePath, filepath.Join("policies", "active")) {
-		t.Errorf("expected active path under policies/active, got: %s", activePath)
-	}
-	if _, err := os.Stat(stagedPath); err == nil {
-		t.Errorf("staged policy should be removed after activation: %s", stagedPath)
-	}
-	activeData, err := os.ReadFile(activePath)
-	if err != nil {
-		t.Fatalf("read active policy: %v", err)
-	}
-	if string(activeData) != proposal.Cedar {
-		t.Errorf("active file content mismatch:\ngot:  %s\nwant: %s", activeData, proposal.Cedar)
-	}
-
+	// Verify lifecycle audit record
 	logger, err := audit.NewLogger(filepath.Join(kitDir, "audit"))
 	if err != nil {
 		t.Fatalf("NewLogger: %v", err)
@@ -119,67 +92,18 @@ func TestStageAndActivatePolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadAll: %v", err)
 	}
-	if len(records) < 2 {
-		t.Fatalf("expected lifecycle audit records, got %d", len(records))
+	if len(records) < 1 {
+		t.Fatalf("expected lifecycle audit record, got %d", len(records))
 	}
 
-	var sawStage, sawActivate bool
+	var sawApprove bool
 	for _, r := range records {
-		if r.DecisionPath != "lifecycle" {
-			continue
-		}
-		if r.Action == "policy:Stage" && r.PolicyRef == "goggins-http-wrike.cedar" {
-			sawStage = true
-		}
-		if r.Action == "policy:Activate" && r.PolicyRef == "goggins-http-wrike.cedar" {
-			sawActivate = true
+		if r.DecisionPath == "lifecycle" && r.Action == "policy:Approve" && r.PolicyRef == "goggins-http-wrike.cedar" {
+			sawApprove = true
 		}
 	}
-	if !sawStage {
-		t.Fatal("missing policy:Stage lifecycle audit record")
-	}
-	if !sawActivate {
-		t.Fatal("missing policy:Activate lifecycle audit record")
-	}
-}
-
-func TestActivateAllStaged(t *testing.T) {
-	kitDir := t.TempDir()
-	p := NewPipeline(PipelineConfig{KitDir: kitDir})
-
-	for _, name := range []string{"b.cedar", "a.cedar"} {
-		_, err := p.StagePolicy(ProposalWithCedar{
-			Agent:    "goggins",
-			Filename: name,
-			Cedar:    "permit(principal, action, resource);",
-		})
-		if err != nil {
-			t.Fatalf("StagePolicy(%s): %v", name, err)
-		}
-	}
-
-	activated, err := p.ActivateAllStaged()
-	if err != nil {
-		t.Fatalf("ActivateAllStaged: %v", err)
-	}
-	if len(activated) != 2 {
-		t.Fatalf("expected 2 activated policies, got %d", len(activated))
-	}
-
-	staged, err := p.ListStagedPolicies()
-	if err != nil {
-		t.Fatalf("ListStagedPolicies: %v", err)
-	}
-	if len(staged) != 0 {
-		t.Fatalf("expected no staged policies after activation, got %v", staged)
-	}
-
-	active, err := p.ListActivePolicies()
-	if err != nil {
-		t.Fatalf("ListActivePolicies: %v", err)
-	}
-	if len(active) != 2 || active[0] != "a.cedar" || active[1] != "b.cedar" {
-		t.Fatalf("unexpected active list: %v", active)
+	if !sawApprove {
+		t.Fatal("missing policy:Approve lifecycle audit record")
 	}
 }
 

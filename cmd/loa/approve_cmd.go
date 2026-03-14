@@ -22,7 +22,7 @@ func runApprove(args []string) {
 		}
 	}
 	if numArg == "" {
-		fmt.Fprintf(os.Stderr, "Usage: loa approve <number> [--stage] [--network-scope host|domain]\n")
+		fmt.Fprintf(os.Stderr, "Usage: loa approve <number> [--network-scope host|domain]\n")
 		os.Exit(1)
 	}
 	var num int
@@ -31,14 +31,12 @@ func runApprove(args []string) {
 		os.Exit(1)
 	}
 	fs := flag.NewFlagSet("approve", flag.ExitOnError)
-	stageOnly := fs.Bool("stage", false, "Stage policy for review; do not activate")
 	networkScope := fs.String("network-scope", "host", "Network scope for http:Request (host|domain)")
 	fs.Parse(flagArgs)
 	if *networkScope != "host" && *networkScope != "domain" {
 		fmt.Fprintf(os.Stderr, "Error: --network-scope must be host or domain\n")
 		os.Exit(1)
 	}
-	activateNow := !*stageOnly
 
 	dir := kitDir()
 	denials, err := loadPendingReviewDenials(dir, "")
@@ -98,21 +96,13 @@ func runApprove(args []string) {
 		renderedPolicy := approval.FormatCedarForDisplay(prop.Cedar, os.Stdout)
 		fmt.Printf("\nPolicy Preview:\n%s\n", indentLines(blueURLs(renderedPolicy), "  "))
 
-		applyResult, err := stageAndMaybeActivatePolicy(pipeline, prop, activateNow)
+		activePath, err := applyPolicy(pipeline, prop)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error applying policy: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("\nStaged: %s\n", filepath.Base(applyResult.StagedPath))
-
-		if applyResult.ActivePath != "" {
-			fmt.Printf("Activated: %s\n", filepath.Base(applyResult.ActivePath))
-		}
+		fmt.Printf("\nActivated: %s\n", filepath.Base(activePath))
 	}
 
-	if activateNow {
-		fmt.Printf("\n🟢 Approved for %s: can now %s %s.\n", d.Agent, d.Action, blueURLs(d.Resource))
-	} else {
-		fmt.Printf("\n⏸️ Staged for review. Activate with: loa policy activate <filename|all>\n")
-	}
+	fmt.Printf("\n🟢 Approved for %s: can now %s %s.\n", d.Agent, d.Action, blueURLs(d.Resource))
 }

@@ -37,14 +37,13 @@ Each `loa run` session creates three Docker containers in one compose stack:
 ## Policy Lifecycle
 
 ```
-denied event -> proposal -> staged policy -> active policy
+denied event -> proposal -> active policy
 ```
 
 1. Denied events appear in audit.
 2. `loa watch` / `loa inbox` shows pending denials.
 3. Approval pipeline proposes Cedar policy (LLM-assisted or template fallback).
-4. `StagePolicy` writes to `policies/staged/`.
-5. `ActivatePolicy` moves to `policies/active/`. Future requests match.
+4. `WriteActivePolicy` writes directly to `policies/active/`. Future requests match.
 
 ## Repository Layout
 

@@ -140,9 +140,7 @@ func TestLoadPolicies_IgnoresStaged(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(kitDir, "policies", "active"), 0755); err != nil {
 		t.Fatalf("mkdir policies/active: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(kitDir, "policies", "staged"), 0755); err != nil {
-		t.Fatalf("mkdir policies/staged: %v", err)
-	}
+
 
 	if err := os.WriteFile(filepath.Join(kitDir, "config", "agents.yml"), []byte(`agents:
   goggins:
@@ -173,9 +171,8 @@ audit:
 	}
 
 	activeFile := filepath.Join(kitDir, "policies", "active", "active.cedar")
-	stagedFile := filepath.Join(kitDir, "policies", "staged", "staged.cedar")
 	rootFile := filepath.Join(kitDir, "policies", "runtime.cedar")
-	for _, f := range []string{activeFile, stagedFile, rootFile} {
+	for _, f := range []string{activeFile, rootFile} {
 		if err := os.WriteFile(f, []byte("permit(principal, action, resource);"), 0644); err != nil {
 			t.Fatalf("write %s: %v", f, err)
 		}
@@ -195,9 +192,6 @@ audit:
 	}
 	if seen[rootFile] {
 		t.Fatalf("root policy should not be loaded for enforcement: %s", rootFile)
-	}
-	if seen[stagedFile] {
-		t.Fatalf("staged policy should not be loaded for enforcement: %s", stagedFile)
 	}
 }
 

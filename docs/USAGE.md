@@ -27,13 +27,11 @@ loa watch [agent] [--verbose]       # live denial stream; verbose adds permits
 loa inbox                           # pending denials across all agents
 
 # Policy
-loa approve <number>                # stage + activate
-loa approve <n> --stage             # stage only
+loa approve <number>                # activate policy
 loa approve <n> --network-scope domain
-loa policy list [--staged|--active]
+loa policy list
 loa policy effective --agent <name>
 loa policy suggest --agent <name> [--since 24h] [--interactive=false]
-loa policy activate <filename|all>
 
 # Audit
 loa audit verify                    # hash-chain integrity check
@@ -89,7 +87,6 @@ Set Claude auth: `LOA_CLAUDE_AUTH_MODE=auto` (default). Prefers OAuth when avail
 
 - `config/` — agent registry, secret registry, always-allowed Cedar
 - `runtimes/` — runtime definitions (runtime.yml + build files)
-- `policies/staged/` — proposed policies pending activation
 - `policies/active/` — enforced Cedar policies
 - `audit/` — JSONL audit records with hash chains
 - `workers/` — worker state (state.json)

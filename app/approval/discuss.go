@@ -37,7 +37,7 @@ func (p *Prompter) discuss(denials []audit.Record, proposal ProposalWithCedar) e
 		fmt.Fprintf(&sb, "Reasoning: %s\n", proposal.Reasoning)
 	}
 	fmt.Fprintf(&sb, "\nCedar policy:\n%s\n", strings.TrimSpace(proposal.Cedar))
-	fmt.Fprintf(&sb, "Target file: policies/staged/%s\n", proposal.Filename)
+	fmt.Fprintf(&sb, "Target file: policies/active/%s\n", proposal.Filename)
 	fmt.Fprintf(&sb, "\nUser question: %s\n", question)
 	sb.WriteString("\nAnswer concisely (2-4 sentences). Focus on security implications and what the resource/domain is.")
 
@@ -79,7 +79,7 @@ func (p *Prompter) discuss(denials []audit.Record, proposal ProposalWithCedar) e
 	for _, line := range strings.Split(strings.TrimSpace(proposal.Cedar), "\n") {
 		fmt.Fprintf(p.out, "  %s\n", line)
 	}
-	fmt.Fprintf(p.out, "  → policies/staged/%s\n", proposal.Filename)
+	fmt.Fprintf(p.out, "  → policies/active/%s\n", proposal.Filename)
 
 	return nil
 }
