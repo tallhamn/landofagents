@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -110,13 +112,7 @@ func (f *fakeControlAuthority) ListAsUID(_ context.Context, uid int, requestID s
 }
 
 func TestControlClientSpawnOverUnixSocket(t *testing.T) {
-	sock := shortSocketPath(t)
-	_ = os.Remove(sock)
-	defer os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatalf("listen unix: %v", err)
-	}
+	ln, sock := newTestUnixListener(t)
 	defer ln.Close()
 
 	fake := &fakeControlAuthority{}
@@ -162,13 +158,7 @@ func TestControlClientSpawnOverUnixSocket(t *testing.T) {
 }
 
 func TestControlClientStatusErrorPropagation(t *testing.T) {
-	sock := shortSocketPath(t)
-	_ = os.Remove(sock)
-	defer os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatalf("listen unix: %v", err)
-	}
+	ln, sock := newTestUnixListener(t)
 	defer ln.Close()
 
 	fake := &fakeControlAuthority{
@@ -189,7 +179,7 @@ func TestControlClientStatusErrorPropagation(t *testing.T) {
 	}()
 
 	client := newControlClient(sock)
-	_, err = client.Status(context.Background(), gapcontrol.WorkerStatusRequest{
+	_, err := client.Status(context.Background(), gapcontrol.WorkerStatusRequest{
 		Version:   gapcontrol.VersionV1,
 		RequestID: "req_status",
 		WorkerID:  "wk_missing",
@@ -209,5 +199,18 @@ func TestControlClientStatusErrorPropagation(t *testing.T) {
 func shortSocketPath(t *testing.T) string {
 	t.Helper()
 	name := fmt.Sprintf("loa-ctrl-%d-%d.sock", os.Getpid(), time.Now().UnixNano())
-	return filepath.Join("/tmp", name)
+	return filepath.Join(t.TempDir(), name)
+}
+
+func newTestUnixListener(t *testing.T) (net.Listener, string) {
+	t.Helper()
+	sock := shortSocketPath(t)
+	ln, err := net.Listen("unix", sock)
+	if err != nil {
+		if errors.Is(err, syscall.EPERM) || errors.Is(err, os.ErrPermission) {
+			t.Skipf("unix sockets unavailable in this environment: %v", err)
+		}
+		t.Fatalf("listen unix: %v", err)
+	}
+	return ln, sock
 }

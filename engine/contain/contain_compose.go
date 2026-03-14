@@ -32,7 +32,7 @@ var composeTmpl = template.Must(template.New("compose").Parse(`services:
     volumes:
       - {{.KitDir}}/config:/etc/loa/config:ro
       - {{.KitDir}}/policies:/etc/loa/policies:ro
-      - {{.KitDir}}/audit:/etc/loa/audit
+      - {{.KitDir}}/audit:/etc/loa/audit:ro
     networks:
       - agent-net
 
@@ -75,7 +75,7 @@ var composeTmpl = template.Must(template.New("compose").Parse(`services:
       - {{.KitDir}}/workspaces/{{.AgentName}}:/workspace
       - {{.KitDir}}/config:/etc/loa/config:ro
       - {{.KitDir}}/policies:/etc/loa/policies:ro
-      - {{.KitDir}}/audit:/etc/loa/audit
+      - {{.KitDir}}/audit:/etc/loa/audit:ro
 {{- range .ManagedVolumes}}
       - {{.}}
 {{- end}}

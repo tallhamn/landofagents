@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -14,13 +13,7 @@ import (
 )
 
 func TestGapControlConformanceSpawnEnvelope(t *testing.T) {
-	sock := shortSocketPath(t)
-	_ = os.Remove(sock)
-	defer os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatalf("listen unix: %v", err)
-	}
+	ln, sock := newTestUnixListener(t)
 	defer ln.Close()
 
 	fake := &fakeControlAuthority{}
@@ -91,13 +84,7 @@ func TestGapControlConformanceStatusErrorCodes(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			sock := shortSocketPath(t)
-			_ = os.Remove(sock)
-			defer os.Remove(sock)
-			ln, err := net.Listen("unix", sock)
-			if err != nil {
-				t.Fatalf("listen unix: %v", err)
-			}
+			ln, sock := newTestUnixListener(t)
 			defer ln.Close()
 
 			fake := &fakeControlAuthority{
@@ -115,11 +102,11 @@ func TestGapControlConformanceStatusErrorCodes(t *testing.T) {
 				}
 			}()
 
-			client := newControlClient(sock)
-			_, err = client.Status(context.Background(), gapcontrol.WorkerStatusRequest{
-				Version:   gapcontrol.VersionV1,
-				RequestID: "req_status_conf",
-				WorkerID:  "wk_missing",
+		client := newControlClient(sock)
+		_, err := client.Status(context.Background(), gapcontrol.WorkerStatusRequest{
+			Version:   gapcontrol.VersionV1,
+			RequestID: "req_status_conf",
+			WorkerID:  "wk_missing",
 			})
 			if err == nil {
 				t.Fatalf("expected %s error", tc.code)
@@ -136,13 +123,7 @@ func TestGapControlConformanceStatusErrorCodes(t *testing.T) {
 }
 
 func TestGapControlConformanceInvalidJSONEnvelope(t *testing.T) {
-	sock := shortSocketPath(t)
-	_ = os.Remove(sock)
-	defer os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatalf("listen unix: %v", err)
-	}
+	ln, sock := newTestUnixListener(t)
 	defer ln.Close()
 
 	fake := &fakeControlAuthority{}
@@ -194,13 +175,7 @@ func TestGapControlConformanceInvalidJSONEnvelope(t *testing.T) {
 }
 
 func TestGapControlConformanceMethodNotAllowedEnvelope(t *testing.T) {
-	sock := shortSocketPath(t)
-	_ = os.Remove(sock)
-	defer os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatalf("listen unix: %v", err)
-	}
+	ln, sock := newTestUnixListener(t)
 	defer ln.Close()
 
 	fake := &fakeControlAuthority{}

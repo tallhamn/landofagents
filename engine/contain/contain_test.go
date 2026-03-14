@@ -251,6 +251,9 @@ func TestGenerateCompose_EnvVarsFromRuntime(t *testing.T) {
 	if !strings.Contains(content, "/home/user/kit/workspaces/hackerman/.claude:/home/node/.claude") {
 		t.Error("missing persistent claude config volume mount")
 	}
+	if !strings.Contains(content, "/home/user/kit/audit:/etc/loa/audit:ro") {
+		t.Error("missing read-only audit volume mount")
+	}
 }
 
 func TestGenerateCompose_NoEnvVarsWhenEmpty(t *testing.T) {
