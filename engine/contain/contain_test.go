@@ -630,16 +630,22 @@ func TestValidateHostPath(t *testing.T) {
 	}{
 		{"/home/user/code", false},
 		{"/srv/loa/data", false},
+		{"/home/user/etc-backup", false},
 		{"/", true},
 		{"/etc", true},
+		{"/etc/ssh", true},
 		{"/proc", true},
+		{"/proc/1/root", true},
 		{"/sys", true},
+		{"/sys/fs/cgroup", true},
 		{"/dev", true},
+		{"/dev/kmsg", true},
 		{"/boot", true},
+		{"/boot/efi", true},
 		{"/var/run/docker.sock", true},
 		{"/run/docker.sock", true},
-		{"/etc/../etc", true},             // path traversal
-		{"/home/user/../../../etc", true},  // path traversal
+		{"/etc/../etc", true},            // path traversal
+		{"/home/user/../../../etc", true}, // path traversal
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
@@ -660,6 +666,11 @@ func TestResolveUserVolumes_RejectsForbiddenPaths(t *testing.T) {
 	_, err = resolveUserVolumes([]string{"/var/run/docker.sock:/var/run/docker.sock"}, nil, nil, false)
 	if err == nil {
 		t.Fatal("expected error for docker socket mount, got nil")
+	}
+
+	_, err = resolveUserVolumes([]string{"/etc/ssh:/container/etc-ssh:ro"}, nil, nil, false)
+	if err == nil {
+		t.Fatal("expected error for /etc subtree mount, got nil")
 	}
 
 	vols, err := resolveUserVolumes([]string{"/home/user/code:/workspace:rw"}, nil, nil, false)

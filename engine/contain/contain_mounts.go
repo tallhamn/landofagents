@@ -66,7 +66,7 @@ var forbiddenHostPaths = []string{
 func validateHostPath(hostPath string) error {
 	cleaned := filepath.Clean(hostPath)
 	for _, forbidden := range forbiddenHostPaths {
-		if cleaned == forbidden {
+		if cleaned == forbidden || strings.HasPrefix(cleaned, forbidden+string(filepath.Separator)) {
 			return fmt.Errorf("mount source %q is a protected system path", cleaned)
 		}
 	}
