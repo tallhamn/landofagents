@@ -141,9 +141,91 @@ func TestLoad(t *testing.T) {
 	if rt.BaseCedar == "" {
 		t.Error("base_cedar is empty")
 	}
-	for _, domain := range []string{"platform.claude.com", "claude.ai", "api.anthropic.com"} {
-		if !strings.Contains(rt.BaseCedar, domain) {
-			t.Errorf("base_cedar missing %s", domain)
+	if len(rt.BaseCedarBlocks) < 4 {
+		t.Fatalf("expected runtime-specific base_cedar_blocks, got %d", len(rt.BaseCedarBlocks))
+	}
+}
+
+func TestRenderBaseCedar_ClaudeByAuthMode(t *testing.T) {
+	dir := t.TempDir()
+	if err := ExtractTo("claude-code", dir); err != nil {
+		t.Fatalf("ExtractTo: %v", err)
+	}
+	rt, err := Load(filepath.Join(dir, "claude-code"))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	got, err := rt.RenderBaseCedar("oauth")
+	if err != nil {
+		t.Fatalf("RenderBaseCedar(oauth): %v", err)
+	}
+	for _, domain := range []string{"platform.claude.com", "claude.ai"} {
+		if !strings.Contains(got, domain) {
+			t.Fatalf("oauth baseline missing %s:\n%s", domain, got)
+		}
+	}
+	if strings.Contains(got, "api.anthropic.com") {
+		t.Fatalf("oauth baseline should not include api.anthropic.com:\n%s", got)
+	}
+
+	got, err = rt.RenderBaseCedar("api")
+	if err != nil {
+		t.Fatalf("RenderBaseCedar(api): %v", err)
+	}
+	if !strings.Contains(got, "api.anthropic.com") {
+		t.Fatalf("api baseline missing anthropic endpoint:\n%s", got)
+	}
+	if strings.Contains(got, "platform.claude.com") {
+		t.Fatalf("api baseline should not include oauth endpoint:\n%s", got)
+	}
+}
+
+func TestRenderBaseCedar_FoundryUsesEndpointTemplate(t *testing.T) {
+	dir := t.TempDir()
+	if err := ExtractTo("claude-code", dir); err != nil {
+		t.Fatalf("ExtractTo: %v", err)
+	}
+	rt, err := Load(filepath.Join(dir, "claude-code"))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://my-resource.openai.azure.com/v1")
+	got, err := rt.RenderBaseCedar("foundry")
+	if err != nil {
+		t.Fatalf("RenderBaseCedar(foundry): %v", err)
+	}
+	if !strings.Contains(got, `Resource::"azure.com"`) {
+		t.Fatalf("foundry baseline missing rendered endpoint domain:\n%s", got)
+	}
+}
+
+func TestRenderBaseCedar_OpenClawIncludesOnlyPresentProviderEnv(t *testing.T) {
+	dir := t.TempDir()
+	if err := ExtractTo("openclaw", dir); err != nil {
+		t.Fatalf("ExtractTo(openclaw): %v", err)
+	}
+	rt, err := Load(filepath.Join(dir, "openclaw"))
+	if err != nil {
+		t.Fatalf("Load(openclaw): %v", err)
+	}
+
+	t.Setenv("OPENAI_API_KEY", "sk-test")
+	t.Setenv("TELEGRAM_BOT_TOKEN", "")
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENROUTER_API_KEY", "")
+
+	got, err := rt.RenderBaseCedar("")
+	if err != nil {
+		t.Fatalf("RenderBaseCedar(openclaw): %v", err)
+	}
+	if !strings.Contains(got, "api.openai.com") {
+		t.Fatalf("openclaw baseline missing openai endpoint:\n%s", got)
+	}
+	for _, domain := range []string{"api.telegram.org", "api.anthropic.com", "openrouter.ai"} {
+		if strings.Contains(got, domain) {
+			t.Fatalf("openclaw baseline should not include %s without env:\n%s", domain, got)
 		}
 	}
 }

@@ -52,13 +52,13 @@ func runApprove(args []string) {
 
 	d := denials[num-1]
 	if isUnmappedDeniedRecord(d) {
-		fmt.Printf("⏸️ Blocked request is unmapped (%s)\n", d.DecisionPath)
+		fmt.Printf("Observed shell activity is not policy-approvable (%s)\n", d.DecisionPath)
 		fmt.Printf("  Action:   %s\n", d.Action)
 		fmt.Printf("  Resource: %s\n", d.Resource)
 		if d.DenialReason != "" {
 			fmt.Printf("  Reason:   %s\n", d.DenialReason)
 		}
-		fmt.Printf("\nNo Cedar policy will fix this. Update command mappings in config/protector.yml or keep it blocked.\n")
+		fmt.Printf("\nCedar policy is only used for governed resources like network access. Shell activity is recorded for audit only.\n")
 		return
 	}
 

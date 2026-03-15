@@ -2,7 +2,7 @@
 //
 // Scope:
 //   - classify shell commands into action/resource tuples
-//   - apply always-deny and unmapped command handling
+//   - label unmapped or flagged shell activity for observation
 //   - evaluate mapped command segments through Cedar
 //   - emit structured audit decisions
 //
@@ -25,7 +25,7 @@ import (
 // Decision represents the result of evaluating a command.
 type Decision struct {
 	Result    string // "permit" or "deny"
-	Path      string // "always_allowed", "policy", "unmapped", "pipe_to_shell"
+	Path      string // "always_allowed", "policy", "activity_unmapped", "activity_flagged"
 	Action    string
 	Resource  string
 	Reason    string

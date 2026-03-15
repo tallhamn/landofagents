@@ -7,7 +7,7 @@ build:
 env:
   - OPENAI_API_KEY
 base_cedar: |
-  // Codex: OpenAI API access
+  // Codex baseline: OpenAI API access
   permit(
     principal,
     action == Action::"http:Request",

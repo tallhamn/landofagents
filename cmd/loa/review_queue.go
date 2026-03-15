@@ -65,7 +65,7 @@ func isDeniedRecord(r audit.Record) bool {
 
 func isUnmappedDecisionPath(path string) bool {
 	switch strings.TrimSpace(path) {
-	case "unmapped", "pipe_to_shell":
+	case "activity_unmapped", "activity_flagged":
 		return true
 	default:
 		return false

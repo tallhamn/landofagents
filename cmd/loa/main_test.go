@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/marcusmom/land-of-agents/engine/agent"
 	"github.com/marcusmom/land-of-agents/app/approval"
+	"github.com/marcusmom/land-of-agents/engine/agent"
 	"github.com/marcusmom/land-of-agents/engine/audit"
 	"github.com/marcusmom/land-of-agents/engine/netscope"
 )
@@ -1426,12 +1426,12 @@ func TestRunInboxFormatting_MixedDenialsGolden(t *testing.T) {
 		Scope:        "hackerman",
 		Action:       "exec:Run",
 		Resource:     "source",
-		Decision:     "deny",
-		DecisionPath: "unmapped",
-		DenialReason: "unknown command",
+		Decision:     "permit",
+		DecisionPath: "activity_unmapped",
+		DenialReason: "unmapped command",
 		Timestamp:    time.Date(2026, 3, 1, 11, 22, 34, 0, time.UTC),
 	}); err != nil {
-		t.Fatalf("log unmapped deny: %v", err)
+		t.Fatalf("log command activity: %v", err)
 	}
 
 	cap := startStdoutCapture(t)
@@ -1439,10 +1439,8 @@ func TestRunInboxFormatting_MixedDenialsGolden(t *testing.T) {
 	out := cap.Stop()
 
 	wantFragments := []string{
-		"📥 Pending review queue (2)",
+		"📥 Pending review queue (1)",
 		"http:Request -> news.yahoo.com  [blocked since no policy exists]",
-		"exec:Run -> source  [unmapped command]",
-		"reason: unknown command",
 		"Approve with: loa approve <number>",
 	}
 	for _, fragment := range wantFragments {

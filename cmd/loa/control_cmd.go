@@ -59,9 +59,11 @@ func runControlSpawn(args []string) {
 	var volumes repeatableFlag
 	var secretRefs repeatableFlag
 	var labels keyValueFlag
+	var envVars keyValueFlag
 	fs.Var(&volumes, "volume", "Mount volume (repeatable host:container[:ro|rw])")
 	fs.Var(&secretRefs, "secret-ref", "Secret reference name (repeatable)")
 	fs.Var(&labels, "label", "Label key=value (repeatable)")
+	fs.Var(&envVars, "env", "Caller env var key=value (repeatable, intersected with agent allowed_env)")
 	fs.Parse(args)
 
 	req, err := buildControlSpawnRequest(controlSpawnInput{
@@ -78,6 +80,7 @@ func runControlSpawn(args []string) {
 		Volumes:        append([]string{}, volumes...),
 		SecretRefs:     append([]string{}, secretRefs...),
 		Labels:         labels.Clone(),
+		Env:            envVars.Clone(),
 	})
 	if err != nil {
 		exitControlError(err)

@@ -91,19 +91,19 @@ func TestLoadProtector(t *testing.T) {
 	}
 
 	// Check default_unmapped
-	if kit.Protector.DefaultUnmapped != "deny" {
-		t.Errorf("default_unmapped: got %q, want %q", kit.Protector.DefaultUnmapped, "deny")
+	if kit.Protector.DefaultUnmapped != "permit" {
+		t.Errorf("default_unmapped: got %q, want %q", kit.Protector.DefaultUnmapped, "permit")
 	}
 
-	// Check deny-always patterns
-	var denyPatterns []string
+	// Check shell observation patterns
+	var observedPatterns []string
 	for _, m := range kit.Protector.ToolMappings {
-		if m.Action == "__deny_always" {
-			denyPatterns = append(denyPatterns, m.Pattern)
+		if m.Action == "__observe_always" {
+			observedPatterns = append(observedPatterns, m.Pattern)
 		}
 	}
-	if len(denyPatterns) != 3 {
-		t.Errorf("expected 3 deny-always patterns, got %d: %v", len(denyPatterns), denyPatterns)
+	if len(observedPatterns) != 3 {
+		t.Errorf("expected 3 shell observation patterns, got %d: %v", len(observedPatterns), observedPatterns)
 	}
 }
 
@@ -141,7 +141,6 @@ func TestLoadPolicies_IgnoresStaged(t *testing.T) {
 		t.Fatalf("mkdir policies/active: %v", err)
 	}
 
-
 	if err := os.WriteFile(filepath.Join(kitDir, "config", "agents.yml"), []byte(`agents:
   goggins:
     runtime: claude-code
@@ -155,7 +154,7 @@ recipient_groups: {}
 	}
 
 	if err := os.WriteFile(filepath.Join(kitDir, "config", "protector.yml"), []byte(`tool_mappings: []
-default_unmapped: deny
+default_unmapped: permit
 audit:
   log_dir: audit/
   format: jsonl
@@ -212,7 +211,7 @@ recipient_groups: {}
 		t.Fatalf("write entities.yml: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(kitDir, "config", "protector.yml"), []byte(`tool_mappings: []
-default_unmapped: deny
+default_unmapped: permit
 audit:
   log_dir: audit/
   format: jsonl
@@ -254,7 +253,7 @@ recipient_groups: {}
 	}
 
 	if err := os.WriteFile(filepath.Join(kitDir, "config", "protector.yml"), []byte(`tool_mappings: []
-default_unmapped: deny
+default_unmapped: permit
 audit:
   log_dir: audit/
   format: jsonl

@@ -24,6 +24,7 @@ type controlSpawnInput struct {
 	Volumes        []string
 	SecretRefs     []string
 	Labels         map[string]string
+	Env            map[string]string
 }
 
 func buildControlSpawnRequest(in controlSpawnInput) (gapcontrol.SpawnRequest, error) {
@@ -54,6 +55,7 @@ func buildControlSpawnRequest(in controlSpawnInput) (gapcontrol.SpawnRequest, er
 		Runtime:        in.Runtime,
 		Labels:         in.Labels,
 	}
+	out.Env = in.Env
 	out.MountProfile.Volumes = append([]string{}, in.Volumes...)
 	out.NetworkProfile.Mode = in.Mode
 	out.NetworkProfile.InitialPolicyScope = in.InitialScope

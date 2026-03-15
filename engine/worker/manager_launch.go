@@ -102,6 +102,7 @@ func (m *Manager) Launch(ctx context.Context, req LaunchRequest) (LaunchResponse
 			UseOnlyExtraVolumes: true,
 			SecretRefs:          append([]string{}, requestedSecretRefs...),
 			SecretRole:          secrets.RoleWorker,
+			CallerEnv:           cloneLabels(req.Env),
 			LogOut:              io.Discard,
 		})
 		if err != nil {

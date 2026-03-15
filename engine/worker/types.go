@@ -19,6 +19,10 @@ type LaunchRequest struct {
 	Runtime        string            `json:"runtime,omitempty"`
 	Labels         map[string]string `json:"labels,omitempty"`
 
+	// Env holds caller-provided environment variable overrides (key=value).
+	// Intersected with agent's allowed_env before container injection.
+	Env map[string]string `json:"env,omitempty"`
+
 	MountProfile struct {
 		Volumes []string `json:"volumes,omitempty"`
 	} `json:"mount_profile,omitempty"`

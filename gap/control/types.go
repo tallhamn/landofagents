@@ -16,6 +16,10 @@ type SpawnRequest struct {
 	Nonce          string            `json:"nonce,omitempty"`
 	Labels         map[string]string `json:"labels,omitempty"`
 
+	// Env holds caller-provided environment variable overrides (key=value).
+	// These are intersected with the agent's allowed_env policy before injection.
+	Env map[string]string `json:"env,omitempty"`
+
 	MountProfile struct {
 		Volumes []string `json:"volumes,omitempty"`
 	} `json:"mount_profile,omitempty"`

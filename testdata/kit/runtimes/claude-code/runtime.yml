@@ -22,38 +22,51 @@ env:
   - AZURE_OPENAI_ENDPOINT
   - AZURE_API_VERSION
 base_cedar: |
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"platform.claude.com"
-  );
+  // Claude Code baseline: selected by auth mode below.
+base_cedar_blocks:
+  - auth_modes: ["oauth"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"platform.claude.com"
+      );
 
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"claude.ai"
-  );
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"claude.ai"
+      );
 
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"api.anthropic.com"
-  );
+  - auth_modes: ["api"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"api.anthropic.com"
+      );
 
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"sentry.io"
-  );
+  - auth_modes: ["bedrock"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"amazonaws.com"
+      );
 
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"statsig.anthropic.com"
-  );
+  - auth_modes: ["vertex"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"googleapis.com"
+      );
 
-  permit(
-    principal,
-    action == Action::"http:Request",
-    resource == Resource::"http-intake.logs.us5.datadoghq.com"
-  );
+  - auth_modes: ["foundry"]
+    when_env: ["AZURE_OPENAI_ENDPOINT"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"{{ envDomain "AZURE_OPENAI_ENDPOINT" }}"
+      );

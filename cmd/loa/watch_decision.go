@@ -45,10 +45,10 @@ func decisionPathLabel(path, decision string) string {
 		return "activity observed"
 	case "activity_file":
 		return "file activity observed"
-	case "unmapped":
-		return "unmapped command"
-	case "pipe_to_shell":
-		return "blocked pipe-to-shell"
+	case "activity_unmapped":
+		return "unmapped command observed"
+	case "activity_flagged":
+		return "flagged shell activity observed"
 	case "lifecycle":
 		return "policy lifecycle"
 	case "error":

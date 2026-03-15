@@ -71,13 +71,13 @@ permit(
   - executable: "go"
     action: "sandbox:RunScript"
   - pattern: "* | bash"
-    action: "__deny_always"
+    action: "__observe_always"
   - pattern: "* | sh"
-    action: "__deny_always"
+    action: "__observe_always"
   - pattern: "eval *"
-    action: "__deny_always"
+    action: "__observe_always"
 
-default_unmapped: deny
+default_unmapped: permit
 
 audit:
   log_dir: audit/

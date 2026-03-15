@@ -99,8 +99,44 @@ func SetupEnvironment(opts Options) (*Environment, error) {
 	allowlist = append(allowlist, secretEnv...)
 	explicitSecretPolicy := len(secrets.NormalizeAllowlist(agentConfig.AllowedEnv)) > 0 || len(agentConfig.AllowedSecrets) > 0
 	runtimeEnv, _ = secrets.FilterDeclaredEnvStrict(runtimeEnv, allowlist, explicitSecretPolicy)
+
+	// Apply caller-provided env overrides. Only vars whose names appear in the
+	// agent's effective allowlist are accepted; everything else is silently dropped.
+	// Accepted caller vars are injected as literal KEY=VALUE (managed env) and
+	// removed from passthrough env to avoid conflicts.
+	var callerManagedEnv []string
+	if len(opts.CallerEnv) > 0 {
+		normalizedAllow := secrets.NormalizeAllowlist(allowlist)
+		allowSet := make(map[string]bool, len(normalizedAllow))
+		for _, name := range normalizedAllow {
+			allowSet[name] = true
+		}
+		callerAccepted := make(map[string]bool)
+		for k, v := range opts.CallerEnv {
+			upper := strings.ToUpper(strings.TrimSpace(k))
+			if upper == "" {
+				continue
+			}
+			if allowSet[upper] {
+				callerManagedEnv = append(callerManagedEnv, fmt.Sprintf("%s=%s", upper, v))
+				callerAccepted[upper] = true
+			}
+		}
+		// Remove passthrough entries that caller is overriding with literal values.
+		if len(callerAccepted) > 0 {
+			filtered := runtimeEnv[:0]
+			for _, name := range runtimeEnv {
+				if !callerAccepted[strings.ToUpper(name)] {
+					filtered = append(filtered, name)
+				}
+			}
+			runtimeEnv = filtered
+		}
+	}
+
 	authMode = prepared.AuthMode
 	managedEnv = prepared.AgentEnv
+	managedEnv = append(managedEnv, callerManagedEnv...)
 	managedVolumes = prepared.AgentVolumes
 
 	tmpDir, err := os.MkdirTemp("", "loa-contain-*")
@@ -121,7 +157,11 @@ func SetupEnvironment(opts Options) (*Environment, error) {
 		return nil, fmt.Errorf("copy kit: %w", err)
 	}
 
-	if err := writeBaseCedar(kitDir, opts.AgentName, rt.BaseCedar); err != nil {
+	baseCedar, err := rt.RenderBaseCedar(prepared.AuthMode)
+	if err != nil {
+		return nil, fmt.Errorf("render runtime base cedar: %w", err)
+	}
+	if err := writeBaseCedar(kitDir, opts.AgentName, baseCedar); err != nil {
 		return nil, err
 	}
 

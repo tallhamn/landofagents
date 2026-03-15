@@ -17,14 +17,14 @@ type Result struct {
 type Classification struct {
 	Command  string
 	Segments []Result
-	Decision string // "permit_candidate", "deny_unmapped", "deny_always"
+	Decision string // "permit_candidate", "observe_unmapped", "observe_flagged"
 	Reason   string
 }
 
 // Classifier classifies bash commands against tool mappings.
 type Classifier struct {
 	mappings        []Mapping
-	defaultUnmapped string // "deny" or "permit"
+	defaultUnmapped string // currently informational: "permit" or "deny"
 	strict          bool
 }
 
@@ -62,13 +62,13 @@ func (c *Classifier) Classify(command string) Classification {
 	cl := Classification{Command: command}
 
 	if isPipeToShell(command) {
-		cl.Decision = "deny_always"
-		cl.Reason = "pipe-to-shell pattern detected"
+		cl.Decision = "observe_flagged"
+		cl.Reason = "pipe-to-shell pattern observed"
 		return cl
 	}
 	if c.strict && isHighRiskExecutionChain(command) {
-		cl.Decision = "deny_always"
-		cl.Reason = "high-risk command chain detected (strict mode)"
+		cl.Decision = "observe_flagged"
+		cl.Reason = "high-risk command chain observed (strict mode)"
 		return cl
 	}
 
@@ -86,9 +86,9 @@ func (c *Classifier) Classify(command string) Classification {
 		result := c.classifySegment(seg)
 		cl.Segments = append(cl.Segments, result)
 
-		if result.Action == "__deny_always" {
-			cl.Decision = "deny_always"
-			cl.Reason = "dangerous pattern: " + seg
+		if result.Action == "__observe_always" {
+			cl.Decision = "observe_flagged"
+			cl.Reason = "flagged shell pattern observed: " + seg
 			return cl
 		}
 		if !result.Matched {
@@ -97,8 +97,8 @@ func (c *Classifier) Classify(command string) Classification {
 	}
 
 	if !allMatched {
-		cl.Decision = "deny_unmapped"
-		cl.Reason = "unknown command"
+		cl.Decision = "observe_unmapped"
+		cl.Reason = "unmapped command"
 		return cl
 	}
 

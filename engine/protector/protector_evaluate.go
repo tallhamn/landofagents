@@ -2,10 +2,7 @@ package protector
 
 import (
 	"fmt"
-	"strings"
 	"time"
-
-	"github.com/marcusmom/land-of-agents/engine/denial"
 )
 
 // Evaluate classifies and evaluates a command, returning the decision.
@@ -15,37 +12,28 @@ func (p *Protector) Evaluate(command string) Decision {
 	// Step 1: Classify the command
 	cl := p.classifier.Classify(command)
 
-	// Step 2: Handle pipe-to-shell and unmapped
+	// Step 2: Record flagged or unmapped command activity without blocking execution.
 	switch cl.Decision {
-	case "deny_always":
-		var msg denial.Message
-		if strings.Contains(strings.ToLower(cl.Reason), "pipe-to-shell") {
-			msg = denial.NewPipeToShellDenial(p.agent, command)
-		} else {
-			msg = denial.NewDangerousCommandDenial(p.agent, cl.Reason)
-		}
+	case "observe_flagged":
 		d := Decision{
-			Result:    "deny",
-			Path:      "pipe_to_shell",
+			Result:    "permit",
+			Path:      "activity_flagged",
 			Reason:    cl.Reason,
 			LatencyMs: time.Since(start).Milliseconds(),
-			Denial:    &msg,
 		}
 		p.logDecision(command, d)
 		return d
 
-	case "deny_unmapped":
+	case "observe_unmapped":
 		executable := ""
 		if len(cl.Segments) > 0 {
 			executable = cl.Segments[0].Executable
 		}
-		msg := denial.NewUnmappedDenial(p.agent, executable)
 		d := Decision{
-			Result:    "deny",
-			Path:      "unmapped",
+			Result:    "permit",
+			Path:      "activity_unmapped",
 			Reason:    cl.Reason,
 			LatencyMs: time.Since(start).Milliseconds(),
-			Denial:    &msg,
 		}
 		if len(cl.Segments) > 0 {
 			d.Action = cl.Segments[0].Action
@@ -92,7 +80,7 @@ func (p *Protector) Evaluate(command string) Decision {
 
 		if err != nil {
 			d := Decision{
-				Result:    "deny",
+				Result:    "permit",
 				Path:      "error",
 				Action:    seg.Action,
 				Resource:  seg.Resource,
@@ -104,8 +92,6 @@ func (p *Protector) Evaluate(command string) Decision {
 		}
 
 		if cedarDecision == CedarDeny {
-			msg := denial.NewDenial(p.agent, seg.Action, seg.Resource,
-				fmt.Sprintf("Cedar denied %s on %s", seg.Action, seg.Resource))
 			d := Decision{
 				Result:    "deny",
 				Path:      "policy",
@@ -113,7 +99,6 @@ func (p *Protector) Evaluate(command string) Decision {
 				Resource:  seg.Resource,
 				Reason:    fmt.Sprintf("Cedar denied %s on %s", seg.Action, seg.Resource),
 				LatencyMs: time.Since(start).Milliseconds(),
-				Denial:    &msg,
 			}
 			p.logDecision(command, d)
 			return d

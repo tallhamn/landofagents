@@ -51,6 +51,7 @@ func (s *Service) SpawnAsUID(ctx context.Context, uid int, req control.SpawnRequ
 		ParentWorkerID: strings.TrimSpace(req.ParentWorkerID),
 		Runtime:        strings.TrimSpace(req.Runtime),
 		Labels:         cloneMap(req.Labels),
+		Env:            cloneMap(req.Env),
 	}
 	workerReq.MountProfile.Volumes = append([]string{}, req.MountProfile.Volumes...)
 	workerReq.NetworkProfile.Mode = strings.TrimSpace(req.NetworkProfile.Mode)

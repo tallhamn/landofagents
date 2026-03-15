@@ -19,7 +19,11 @@ type Options struct {
 	UseOnlyExtraVolumes bool
 	SecretRefs          []string // explicit secret ref override; nil => agent defaults, empty => no secret refs
 	SecretRole          string   // secret exposure role context: "gateway" (default) or "worker"
-	LogOut              io.Writer
+	// CallerEnv holds caller-provided env overrides (key=value). Intersected with
+	// agent's allowed_env policy: only vars whose names appear in allowed_env are
+	// injected. Caller values override runtime passthrough for the same var name.
+	CallerEnv map[string]string
+	LogOut    io.Writer
 }
 
 // Environment holds the paths produced by SetupEnvironment.

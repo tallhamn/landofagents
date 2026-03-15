@@ -86,11 +86,11 @@ func TestApprovedTracker_FiltersCoveredDenials(t *testing.T) {
 }
 
 func TestIsUnmappedDecisionPath(t *testing.T) {
-	if !isUnmappedDecisionPath("unmapped") {
-		t.Fatal("expected unmapped to be classified as unmapped")
+	if !isUnmappedDecisionPath("activity_unmapped") {
+		t.Fatal("expected activity_unmapped to be classified as command-only activity")
 	}
-	if !isUnmappedDecisionPath("pipe_to_shell") {
-		t.Fatal("expected pipe_to_shell to be classified as unmapped")
+	if !isUnmappedDecisionPath("activity_flagged") {
+		t.Fatal("expected activity_flagged to be classified as command-only activity")
 	}
 	if isUnmappedDecisionPath("policy") {
 		t.Fatal("did not expect policy path to be classified as unmapped")

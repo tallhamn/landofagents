@@ -6,5 +6,37 @@ env:
   - ANTHROPIC_API_KEY
   - OPENROUTER_API_KEY
 base_cedar: |
-  // OpenClaw baseline: intentionally empty.
-  // Approve required network access through LOA policy flow.
+  // OpenClaw baseline: provider access declared below and enabled only when the
+  // matching credential env var is present.
+base_cedar_blocks:
+  - when_env: ["TELEGRAM_BOT_TOKEN"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"api.telegram.org"
+      );
+
+  - when_env: ["OPENAI_API_KEY"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"api.openai.com"
+      );
+
+  - when_env: ["ANTHROPIC_API_KEY"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"api.anthropic.com"
+      );
+
+  - when_env: ["OPENROUTER_API_KEY"]
+    cedar: |
+      permit(
+        principal,
+        action == Action::"http:Request",
+        resource == Resource::"openrouter.ai"
+      );
